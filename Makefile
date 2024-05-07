@@ -9,7 +9,7 @@ CC = g++
 CFLAGS = -Wall -Wextra -std=c++17
 EXECUTABLE = plazza
 SRC_DIR = src
-INCLUDE_DIR = Includes
+INCLUDE_DIR = includes
 
 SRCS = $(shell find $(SRC_DIR) -name '*.cpp')
 OBJS = $(SRCS:.cpp=.o)
