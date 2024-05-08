@@ -8,16 +8,18 @@
 #ifndef RECEPTION_HPP_
 #define RECEPTION_HPP_
 
-#include <vector>
 #include "Kitchen.hpp"
+#include <vector>
+#include <string>
 
 class Reception {
 public:
     Reception();
-    void start(int cooking_time, int num_cooks, int restock_time);
+    void start(int multiplier, int num_cooks, int restock_time);
 
 private:
     std::vector<Kitchen> kitchens_;
+    void trim(std::string &s);
 };
 
 #endif // RECEPTION_HPP_
