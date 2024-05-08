@@ -8,10 +8,25 @@
 #include "Kitchen.hpp"
 #include <iostream>
 
-Kitchen::Kitchen(int numCooks) : numCooks_(numCooks) {}
+Kitchen::Kitchen(int numCooks, int restockTime, int multiplier) 
+    : numCooks_(numCooks), freeCooks_(numCooks), restockTime_(restockTime), multiplier_(multiplier) {}
 
 void Kitchen::receiveOrder(const Pizza& pizza) {
-    // Here you would add the pizza to a queue or directly to a cook depending on your design
-    std::cout << "Order received for a pizza of type " << pizza.getType() << " and size " << pizza.getSize() << std::endl;
-    // Implement logic to distribute this order among available cooks
+    if (freeCooks_ > 0) {
+        orders_.push_back(pizza);
+        --freeCooks_;
+        std::cout << "Order for " << pizza.getType() << " size " << pizza.getSize() << " added to kitchen." << std::endl;
+    } else {
+        std::cerr << "No free cooks available in this kitchen." << std::endl;
+    }
+}
+
+void Kitchen::restock() {
+}
+
+void Kitchen::completeOrder() {
+    if (!orders_.empty()) {
+        orders_.pop_back();
+        ++freeCooks_;
+    }
 }

@@ -32,6 +32,7 @@ public:
     static PizzaSize stringToPizzaSize(const std::string& size);
     PizzaType getType() const { return type_; }
     PizzaSize getSize() const { return size_; }
+    int getCookTime() const;
 private:
     PizzaType type_;
     PizzaSize size_;

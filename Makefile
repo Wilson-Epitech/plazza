@@ -6,7 +6,7 @@
 ##
 
 CC = g++
-CFLAGS = -Wall -Wextra -std=c++17
+CFLAGS = -Wall -Wextra -std=c++17 -pthread
 EXECUTABLE = plazza
 SRC_DIR = src
 INCLUDE_DIR = includes

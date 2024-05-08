@@ -10,6 +10,20 @@
 
 Pizza::Pizza(PizzaType type, PizzaSize size) : type_(type), size_(size) {}
 
+int Pizza::getCookTime() const {
+    switch (type_) {
+        case Margarita:
+            return 1;
+        case Regina:
+            return 2;
+        case Americana:
+            return 2;
+        case Fantasia:
+            return 4;
+    }
+    throw std::invalid_argument("Invalid pizza type");
+}
+
 PizzaType Pizza::stringToPizzaType(const std::string& type) {
     if (type == "regina") return Regina;
     if (type == "margarita") return Margarita;
