@@ -8,7 +8,7 @@
 #include <memory>
 #include <unistd.h>
 
-Reception::Reception() {}
+Reception::Reception() = default;
 
 void Reception::trim(std::string &s) {
     s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) {
@@ -19,67 +19,83 @@ void Reception::trim(std::string &s) {
     }).base(), s.end());
 }
 
+std::vector<std::string> Reception::getOrders() {
+    std::string input;
+    std::cout << "> ";
+    if (!getline(std::cin, input)) {
+        throw std::runtime_error("Input error");
+    }
+    if (input == "exit") {
+        throw std::runtime_error("Exiting the program.");
+    }
+
+    std::vector<std::string> orders;
+    std::stringstream ss(input);
+    std::string order;
+
+    while (std::getline(ss, order, ';')) {
+        trim(order);
+        if (!order.empty()) {
+            orders.push_back(order);
+        }
+    }
+    return orders;
+}
+
+void Reception::processOrder(const std::string& single_order, std::vector<Kitchen>& kitchens_, int num_cooks, int restock_time, int multiplier) {
+    std::istringstream iss(single_order);
+    std::string type, size;
+    int number;
+    char xChar; // For reading the 'x' character
+
+    if (!(iss >> type >> size >> xChar >> number) || xChar != 'x') {
+        std::cerr << "Invalid order format: " << single_order << std::endl;
+        return; // Skip to the next order if the format is invalid
+    }
+    try {
+        PizzaType pizzaType = Pizza::stringToPizzaType(type);
+        PizzaSize pizzaSize = Pizza::stringToPizzaSize(size);
+        Pizza newPizza(pizzaType, pizzaSize);
+
+        bool orderPlaced = false;
+        for (auto& kitchen : kitchens_) {
+            if (kitchen.getFreeCooks() > 0) {
+                for (int i = 0; i < number; i++) {
+                    kitchen.receiveOrder(newPizza);
+                }
+                orderPlaced = true;
+                break; // Order has been placed, no need to initialize a new kitchen
+            }
+        }
+        if (!orderPlaced) {
+            createKitchen(kitchens_, num_cooks, restock_time, multiplier, newPizza, number);
+        }
+    } catch (const std::invalid_argument& e) {
+        std::cerr << "Error processing order: " << e.what() << std::endl;
+    }
+}
+
+void Reception::createKitchen(std::vector<Kitchen>& kitchens_, int num_cooks, int restock_time, int multiplier, const Pizza& newPizza, int number) {
+    std::cout << "All kitchens are full. Initializing a new kitchen.\n";
+    kitchens_.emplace_back(num_cooks, restock_time, multiplier);
+    for (int i = 0; i < number; i++) {
+        kitchens_.back().receiveOrder(newPizza);
+    }
+    std::cout << "New kitchen initialized and order placed.\n";
+}
+
 void Reception::start(int multiplier, int num_cooks, int restock_time) {
     std::vector<Kitchen> kitchens_;
-    std::string input;
 
     while (true) {
-        std::cout << "> ";
-        if (!getline(std::cin, input)) {
-            return; // Handles EOF or input error by exiting the loop
-        }
-        if (input == "exit") {
-            std::cout << "Exiting the program." << std::endl;
-            break; // Break out of the loop to end the program
-        }
-
-        std::vector<std::string> orders;
-        std::stringstream ss(input);
-        std::string order;
-
-        while (std::getline(ss, order, ';')) {
-            trim(order);
-            if (!order.empty()) {
-                orders.push_back(order);
+        try {
+            std::vector<std::string> orders = getOrders();
+            for (const auto& single_order : orders) {
+                processOrder(single_order, kitchens_, num_cooks, restock_time, multiplier);
             }
-        }
-
-        for (const auto& single_order : orders) {
-            std::istringstream iss(single_order);
-            std::string type, size;
-            int number;
-            char xChar; // For reading the 'x' character
-
-            if (!(iss >> type >> size >> xChar >> number) || xChar != 'x') {
-                std::cerr << "Invalid order format: " << single_order << std::endl;
-                continue; // Skip to the next order if the format is invalid
-            }
-            try {
-                PizzaType pizzaType = Pizza::stringToPizzaType(type);
-                PizzaSize pizzaSize = Pizza::stringToPizzaSize(size);
-                Pizza newPizza(pizzaType, pizzaSize);
-
-                bool orderPlaced = false;
-                for (auto& kitchen : kitchens_) {
-                    if (kitchen.getFreeCooks() > 0) {
-                        for (int i = 0; i < number; i++) {
-                            kitchen.receiveOrder(newPizza);
-                        }
-                        orderPlaced = true;
-                        break; // Order has been placed, no need to initialize a new kitchen
-                    }
-                }
-                if (!orderPlaced) {
-                    std::cout << "All kitchens are full. Initializing a new kitchen.\n";
-                    kitchens_.emplace_back(num_cooks, restock_time, multiplier);
-                    for (int i = 0; i < number; i++) {
-                        kitchens_.back().receiveOrder(newPizza);
-                    }
-                    std::cout << "New kitchen initialized and order placed.\n";
-                }
-            } catch (const std::invalid_argument& e) {
-                std::cerr << "Error processing order: " << e.what() << std::endl;
-            }
+        } catch (const std::runtime_error& e) {
+            std::cout << e.what() << std::endl;
+            break;
         }
         sleep(10);
     }
