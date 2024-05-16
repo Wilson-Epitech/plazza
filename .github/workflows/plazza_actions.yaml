@@ -1,0 +1,36 @@
+name: plazza_actions
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  check_all:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    container:
+      image: epitechcontent/epitest-docker:latest
+      volumes:
+        - ${{ github.workspace }}:/app
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: check compilation
+      run: |
+          echo "## 🚀 Compilation result" >> $GITHUB_STEP_SUMMARY
+          {
+            set +e
+            make ADDITIONAL_FLAGS="-Werror -Wall -Wextra"
+            if [ $? -ne 0 ]; then
+              echo "- ### Compilation failed ❌" >> $GITHUB_STEP_SUMMARY
+              echo "Compilation failed."
+              exit 1
+            else
+              echo "- ### Compilation succeed ✅" >> $GITHUB_STEP_SUMMARY
+              exit 0
+            fi
+          }
