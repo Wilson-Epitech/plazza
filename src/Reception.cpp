@@ -1,3 +1,10 @@
+/*
+** PLAZZA PROJECT, 2024
+** Plazza
+** File description:
+** Reception
+*/
+
 #include "Reception.hpp"
 #include "Kitchen.hpp"
 #include "Pizza.hpp"
@@ -6,7 +13,6 @@
 #include <algorithm>
 #include <vector>
 #include <memory>
-#include <unistd.h>
 
 Reception::Reception() = default;
 
@@ -21,12 +27,12 @@ void Reception::trim(std::string &s) {
 
 std::vector<std::string> Reception::getOrders() {
     std::string input;
-    std::cout << "> ";
-    if (!getline(std::cin, input)) {
+    if (!std::getline(std::cin, input)) {
         throw std::runtime_error("Input error");
     }
     if (input == "exit") {
-        throw std::runtime_error("Exiting the program.");
+        std::cout << "Exiting program.\n";
+        std::exit(0);
     }
 
     std::vector<std::string> orders;
@@ -42,15 +48,14 @@ std::vector<std::string> Reception::getOrders() {
     return orders;
 }
 
-void Reception::processOrder(const std::string& single_order, std::vector<Kitchen>& kitchens_, int num_cooks, int restock_time, int multiplier) {
+int Reception::processOrder(const std::string& single_order, std::vector<Kitchen>& kitchens_, int num_cooks, int restock_time, int multiplier) {
     std::istringstream iss(single_order);
     std::string type, size;
     int number;
     char xChar; // For reading the 'x' character
 
     if (!(iss >> type >> size >> xChar >> number) || xChar != 'x') {
-        std::cerr << "Invalid order format: " << single_order << std::endl;
-        return; // Skip to the next order if the format is invalid
+        throw std::runtime_error("Invalid order format: " + single_order);
     }
     try {
         PizzaType pizzaType = Pizza::stringToPizzaType(type);
@@ -71,8 +76,9 @@ void Reception::processOrder(const std::string& single_order, std::vector<Kitche
             createKitchen(kitchens_, num_cooks, restock_time, multiplier, newPizza, number);
         }
     } catch (const std::invalid_argument& e) {
-        std::cerr << "Error processing order: " << e.what() << std::endl;
+        throw std::runtime_error("Error processing order: " + std::string(e.what()));
     }
+    return 0;
 }
 
 void Reception::createKitchen(std::vector<Kitchen>& kitchens_, int num_cooks, int restock_time, int multiplier, const Pizza& newPizza, int number) {
@@ -88,15 +94,18 @@ void Reception::start(int multiplier, int num_cooks, int restock_time) {
     std::vector<Kitchen> kitchens_;
 
     while (true) {
+        std::cout << "> ";
         try {
             std::vector<std::string> orders = getOrders();
             for (const auto& single_order : orders) {
-                processOrder(single_order, kitchens_, num_cooks, restock_time, multiplier);
+                if (processOrder(single_order, kitchens_, num_cooks, restock_time, multiplier) == 84) {
+                    std::cerr << "Error processing order: " << single_order << std::endl;
+                    break;
+                }
             }
+            std::cout << "Orders processed.\n";
         } catch (const std::runtime_error& e) {
             std::cout << e.what() << std::endl;
-            break;
         }
-        sleep(10);
     }
 }
