@@ -3,9 +3,9 @@
 
 int check_args(char *multiplier, char *cooking_time, char *restock_time)
 {
-    int multiplier_int = atoi(multiplier);
-    int cooking_time_int = atoi(cooking_time);
-    int restock_time_int = atoi(restock_time);
+    int multiplier_int = std::stoi(multiplier);
+    int cooking_time_int = std::stoi(cooking_time);
+    int restock_time_int = std::stoi(restock_time);
 
     if (multiplier_int <= 0 || cooking_time_int <= 0 || restock_time_int <= 0)
         return 84;
