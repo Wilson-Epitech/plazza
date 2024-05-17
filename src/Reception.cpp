@@ -1,10 +1,3 @@
-/*
-** PLAZZA PROJECT, 2024
-** Plazza
-** File description:
-** Reception
-*/
-
 #include "Reception.hpp"
 #include "Kitchen.hpp"
 #include "Pizza.hpp"
@@ -62,18 +55,16 @@ int Reception::processOrder(const std::string& single_order, std::vector<Kitchen
         PizzaSize pizzaSize = Pizza::stringToPizzaSize(size);
         Pizza newPizza(pizzaType, pizzaSize);
 
-        bool orderPlaced = false;
+        int remainingPizzas = number;
         for (auto& kitchen : kitchens_) {
-            if (kitchen.getFreeCooks() > 0) {
-                for (int i = 0; i < number; i++) {
-                    kitchen.receiveOrder(newPizza);
-                }
-                orderPlaced = true;
-                break; // Order has been placed, no need to initialize a new kitchen
+            while (remainingPizzas > 0 && kitchen.getFreeCooks() > 0) {
+                kitchen.receiveOrder(newPizza);
+                --remainingPizzas;
             }
         }
-        if (!orderPlaced) {
-            createKitchen(kitchens_, num_cooks, restock_time, multiplier, newPizza, number);
+
+        while (remainingPizzas > 0) {
+            createKitchen(kitchens_, num_cooks, restock_time, multiplier, newPizza, remainingPizzas);
         }
     } catch (const std::invalid_argument& e) {
         throw std::runtime_error("Error processing order: " + std::string(e.what()));
@@ -81,12 +72,14 @@ int Reception::processOrder(const std::string& single_order, std::vector<Kitchen
     return 0;
 }
 
-void Reception::createKitchen(std::vector<Kitchen>& kitchens_, int num_cooks, int restock_time, int multiplier, const Pizza& newPizza, int number) {
+void Reception::createKitchen(std::vector<Kitchen>& kitchens_, int num_cooks, int restock_time, int multiplier, const Pizza& newPizza, int& remainingPizzas) {
     std::cout << "All kitchens are full. Initializing a new kitchen.\n";
     kitchens_.emplace_back(num_cooks, restock_time, multiplier);
-    for (int i = 0; i < number; i++) {
+    int pizzasToPlace = std::min(num_cooks, remainingPizzas);
+    for (int i = 0; i < pizzasToPlace; i++) {
         kitchens_.back().receiveOrder(newPizza);
     }
+    remainingPizzas -= pizzasToPlace;
     std::cout << "New kitchen initialized and order placed.\n";
 }
 
@@ -107,5 +100,6 @@ void Reception::start(int multiplier, int num_cooks, int restock_time) {
         } catch (const std::runtime_error& e) {
             std::cout << e.what() << std::endl;
         }
+        std::this_thread::sleep_for(std::chrono::seconds(10));
     }
 }

@@ -22,7 +22,6 @@ Kitchen::Kitchen(Kitchen&& other) noexcept
       cooks_(std::move(other.cooks_)) {
 }
 
-
 void synchronized_print(const std::string& message) {
     std::lock_guard<std::mutex> lock(print_mutex);
     std::cout << message << std::endl;
@@ -55,21 +54,19 @@ void Kitchen::cook() {
 
     std::unique_lock<std::mutex> lock(order_mutex);
     while (!stop_) {
-        if (order_cond_.wait_for(lock, std::chrono::seconds(10), [this] { return !orders_.empty() || stop_; })) {
+        if (order_cond_.wait_for(lock, std::chrono::seconds(5), [this] { return !orders_.empty() || stop_; })) {
             if (!orders_.empty()) {
                 auto pizza = std::move(orders_.back());
                 orders_.pop_back();
                 lock.unlock();
-
                 synchronized_print(stream.str() + "Cooking " + std::to_string(pizza.getType()) + " size " + std::to_string(pizza.getSize()));
                 std::this_thread::sleep_for(std::chrono::seconds(pizza.getCookTime()));
-
                 lock.lock();
                 ++freeCooks_;
                 synchronized_print(stream.str() + "Order completed for " + std::to_string(pizza.getType()) + " size " + std::to_string(pizza.getSize()));
             }
         } else {
-            synchronized_print(stream.str() + "No orders in 10 seconds, shutting down kitchen.");
+            synchronized_print(stream.str() + "No orders in 5 seconds, shutting down kitchen.");
             stop_ = true;
         }
     }
