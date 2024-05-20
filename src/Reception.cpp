@@ -6,6 +6,9 @@
 #include <algorithm>
 #include <vector>
 #include <memory>
+#include <unistd.h>
+#include <sys/wait.h>
+
 
 Reception::Reception() = default;
 
@@ -83,6 +86,27 @@ void Reception::createKitchen(std::vector<Kitchen>& kitchens_, int num_cooks, in
     std::cout << "New kitchen initialized and order placed.\n";
 }
 
+// void Reception::start(int multiplier, int num_cooks, int restock_time) {
+//     std::vector<Kitchen> kitchens_;
+
+//     while (true) {
+//         std::cout << "> ";
+//         try {
+//             std::vector<std::string> orders = getOrders();
+//             for (const auto& single_order : orders) {
+//                 if (processOrder(single_order, kitchens_, num_cooks, restock_time, multiplier) == 84) {
+//                     std::cerr << "Error processing order: " << single_order << std::endl;
+//                     break;
+//                 }
+//             }
+//             std::cout << "Orders processed.\n";
+//         } catch (const std::runtime_error& e) {
+//             std::cout << e.what() << std::endl;
+//         }
+//         std::this_thread::sleep_for(std::chrono::seconds(10));
+//     }
+// }
+
 void Reception::start(int multiplier, int num_cooks, int restock_time) {
     std::vector<Kitchen> kitchens_;
 
@@ -91,11 +115,19 @@ void Reception::start(int multiplier, int num_cooks, int restock_time) {
         try {
             std::vector<std::string> orders = getOrders();
             for (const auto& single_order : orders) {
-                if (processOrder(single_order, kitchens_, num_cooks, restock_time, multiplier) == 84) {
+                pid_t pid = fork();
+
+                if (pid == -1) {
+                    throw std::runtime_error("Fork failed.");
+                }
+                else if (pid == 0) {
+                    if (processOrder(single_order, kitchens_, num_cooks, restock_time, multiplier) == 84) {
                     std::cerr << "Error processing order: " << single_order << std::endl;
                     break;
+                    }
                 }
             }
+            while (wait(nullptr) > 0); // for wait all child process
             std::cout << "Orders processed.\n";
         } catch (const std::runtime_error& e) {
             std::cout << e.what() << std::endl;

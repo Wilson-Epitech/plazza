@@ -34,3 +34,13 @@ jobs:
               exit 0
             fi
           }
+
+    - name: Check binary name
+      run: |
+        FILENAME="plazza"
+        if [ -f "$FILENAME" ]; then
+          echo "Binary is correctly named ✅"
+        else
+          echo "Binary $FILENAME not found ❌"
+          exit 1
+        fi
