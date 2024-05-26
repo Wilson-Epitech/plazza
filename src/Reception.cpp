@@ -121,7 +121,7 @@ void Reception::start(int multiplier, int num_cooks, int restock_time) {
             msg.message_type = 1;
             strcpy(msg.message_text, "start order");
             if (msgsnd(msg.msgid, &msg, sizeof(msg.message_text), 0) == -1) {
-                std::cerr << "send failed\n" << strerror(errno) << std::endl;
+                std::cerr << "send failed\n" << std::endl;
                 return;
             }
             for (const auto& single_order : orders) {
