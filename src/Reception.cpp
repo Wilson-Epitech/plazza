@@ -8,7 +8,15 @@
 #include <memory>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <sys/ipc.h>
+#include <sys/msg.h>
 
+struct message {
+    long message_type;
+    char message_text[100];
+    int msgid;
+    key_t key;
+};
 
 Reception::Reception() = default;
 
@@ -82,7 +90,18 @@ int Reception::processOrder(const std::string& single_order, std::vector<Kitchen
     return 0;
 }
 void Reception::createKitchen(std::vector<Kitchen>& kitchens_, int num_cooks, int restock_time, int multiplier, const Pizza& newPizza, int& remainingPizzas) {
+    message msg;
     std::cout << "All kitchens are full. Initializing a new kitchen.\n";
+    msg.key = ftok("keyfile", 65);
+
+    msg.msgid = msgget(msg.key, 0666 | IPC_CREAT);
+    if (msg.msgid == -1) {
+        std::cerr << "get msg failed" << std::endl;
+        return;
+    }
+    if (msgrcv(msg.msgid, &msg, sizeof(msg.message_text), 1, 0) == -1) {
+        std::cerr << "msgrcv failed\n" << std::endl;
+    }
     kitchens_.emplace_back(num_cooks, restock_time, multiplier);
     int pizzasToPlace = std::min(num_cooks, remainingPizzas);
     for (int i = 0; i < pizzasToPlace; i++) {
@@ -93,12 +112,25 @@ void Reception::createKitchen(std::vector<Kitchen>& kitchens_, int num_cooks, in
 }
 
 void Reception::start(int multiplier, int num_cooks, int restock_time) {
+    message msg;
+    msg.key = ftok("keyfile", 65);
     std::vector<Kitchen> kitchens_;
 
+    msg.msgid = msgget(msg.key, 0666 | IPC_CREAT);
+    if (msg.msgid == -1) {
+        std::cerr << "msgget failed" << std::endl;
+        return;
+    }
     while (true) {
         std::cout << "> ";
         try {
             std::vector<std::string> orders = getOrders();
+            msg.message_type = 1;
+            strcpy(msg.message_text, "start order");
+            if (msgsnd(msg.msgid, &msg, sizeof(msg.message_text), 0) == -1) {
+                std::cerr << "send failed\n" << strerror(errno) << std::endl;
+                return;
+            }
             for (const auto& single_order : orders) {
                 if (processOrder(single_order, kitchens_, num_cooks, restock_time, multiplier) == 84) {
                     std::cerr << "Error processing order: " << single_order << std::endl;
