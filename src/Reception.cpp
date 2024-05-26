@@ -10,6 +10,7 @@
 #include <sys/wait.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>
+#include <cstring>
 
 Reception::Reception() = default;
 
