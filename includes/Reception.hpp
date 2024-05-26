@@ -6,6 +6,12 @@
 #include "Pizza.hpp"
 #include "Kitchen.hpp"
 
+struct message {
+    long message_type;
+    char message_text[100];
+    int msgid;
+    key_t key;
+};
 class Reception {
 public:
     Reception();

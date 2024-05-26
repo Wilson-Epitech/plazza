@@ -11,13 +11,6 @@
 #include <sys/ipc.h>
 #include <sys/msg.h>
 
-struct message {
-    long message_type;
-    char message_text[100];
-    int msgid;
-    key_t key;
-};
-
 Reception::Reception() = default;
 
 void Reception::trim(std::string &s) {
