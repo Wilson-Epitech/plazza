@@ -14,7 +14,7 @@
 
 <p align="center"><img src=".github/assets/term-plazza.png" alt="The Plazza" width="820"/></p>
 
-## En deux mots
+## Le projet en quelques mots
 
 Une réception prend les commandes en ligne de commande et les envoie à des cuisines. Chaque cuisine est un **processus**, chaque cuisinier un **thread**. Quand toutes les cuisines sont pleines, on en ouvre une nouvelle, et quand une cuisine ne fait plus rien pendant 5 secondes, elle ferme.
 
@@ -26,19 +26,6 @@ Une réception prend les commandes en ligne de commande et les envoie à des cui
 - Communication réception ↔ cuisines par **files de messages** System V (`msgsnd` / `msgrcv`)
 - Fermeture automatique des cuisines inactives
 - Temps de cuisson et nombre de cuisiniers configurables
-
-## Sous le capot
-
-La réception parse les commandes, cherche une cuisine qui a de la place et lui envoie les pizzas par file de messages. S'il n'y en a pas, elle fork une nouvelle cuisine. Dans chaque cuisine, un pool de threads se partage les commandes, et chaque cuisson dure un temps multiplié par le facteur passé en argument.
-
-```mermaid
-flowchart LR
-    U[Utilisateur] --> R[Réception]
-    R -- msgsnd --> K1[Cuisine 1<br/>processus]
-    R -- msgsnd --> K2[Cuisine 2<br/>processus]
-    K1 --> T1[cuisinier] & T2[cuisinier]
-    K2 --> T3[cuisinier] & T4[cuisinier]
-```
 
 ## Lancer le projet
 
@@ -54,4 +41,4 @@ make
 
 Yassine Majdoul, Wilson Bordichon, Josué Ménager
 
-**Ma part :** J'ai mis en place la **communication entre processus** (files de messages entre la réception et les cuisines), la **création des cuisines** dans des processus fils, le parsing des commandes de la réception et la CI GitHub Actions.
+**Ma partition :** J'ai mis en place la **communication entre processus** (files de messages entre la réception et les cuisines), la **création des cuisines** dans des processus fils, le parsing des commandes de la réception et la CI GitHub Actions.
